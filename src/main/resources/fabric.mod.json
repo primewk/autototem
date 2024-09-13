@@ -3,7 +3,7 @@
 	"id": "autototem",
 	"version": "${version}",
 	"name": "autototem",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "A standalone for the popular module in clients named AutoTotem.",
 	"authors": [
 		"Me!"
 	],

@@ -1,24 +1,63 @@
 package me.prime;
 
-import net.fabricmc.api.ModInitializer;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.util.Hand;
+import net.minecraft.util.hit.HitResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.TimeUnit;
 
-public class Autototem implements ModInitializer {
-	public static final String MOD_ID = "autototem";
+public class Autototem implements ClientModInitializer {
+    private static boolean isEnabled = true;
 
-	// This logger is used to write text to the console and the log file.
-	// It is considered best practice to use your mod id as the logger's name.
-	// That way, it's clear which mod wrote info, warnings, and errors.
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    @Override
+    public void onInitializeClient() {
+        // Register command
+        CommandRegistry.registerCommand(new AutoTotemCommand());
 
-	@Override
-	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
+        // Register event handler
+        MinecraftClient.getInstance().execute(() -> {
+            ClientPlayerEntity player = MinecraftClient.getInstance().player;
+            player.events.invoker().onInventoryChanged((inventory, slot) -> {
+                if (isEnabled && slot.getStack().getItem() == Items.TOTEM_OF_UNDYING) {
+                    // Check if totem was used up
+                    if (slot.getStack().isEmpty()) {
+                        // Delay to avoid instant replacement
+                        MinecraftClient.getInstance().execute(() -> {
+                            replaceTotem(player);
+                        }, 20); // 1 second delay
+                    }
+                }
+            });
+        });
+    }
 
-		LOGGER.info("Hello Fabric world!");
-	}
+    private static void replaceTotem(ClientPlayerEntity player) {
+        // Find a Totem of Undying in the player's inventory
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            ItemStack stack = player.getInventory().getStack(i);
+            if (stack.getItem() == Items.TOTEM_OF_UNDYING) {
+                // Move totem to offhand
+                player.getInventory().setStack(40, stack); // 40 is the offhand slot
+                break;
+            }
+        }
+    }
+
+    // Command class
+    public static class AutoTotemCommand {
+        public static void execute(String[] args) {
+            if (args.length == 2 && args[0].equals("toggle")) {
+                isEnabled = Boolean.parseBoolean(args[1]);
+                System.out.println("AutoTotem is now " + (isEnabled ? "enabled" : "disabled"));
+            } else {
+                System.out.println("Usage: .autototem toggle <true/false>");
+            }
+        }
+    }
 }

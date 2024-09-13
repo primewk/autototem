@@ -1,0 +1,8 @@
+{
+    "name": "AutoTotem",
+    "version": "1.0",
+    "description": "A standalone for the popular module in clients named AutoTotem.",
+    "author": "Your Name",
+    "mainClass": "me.prime.Autototem",
+    "environment": "client"
+  }
